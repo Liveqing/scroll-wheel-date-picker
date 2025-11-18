@@ -139,6 +139,28 @@ ScrollWheelDatePicker(
 ),
 ```
 
+### Hide Out-of-Range Dates
+
+Hide dates that cannot be selected (after `lastDate` or before `startDate`).
+
+```dart
+ScrollWheelDatePicker(
+  startDate: DateTime(2020, 1, 1),
+  initialDate: DateTime.now(),
+  lastDate: DateTime.now(), // Can only select up to today
+  hideOutOfRange: true, // Hide dates after today
+  loopDays: false,
+  loopMonths: false,
+  loopYears: false,
+  theme: FlatDatePickerTheme(
+    backgroundColor: Colors.white,
+    overlay: ScrollWheelDatePickerOverlay.holo,
+    itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.black),
+    overlayColor: Colors.blue,
+  ),
+),
+```
+
 ### Year Only Picker
 
 Ideal for year of birth, graduation year, etc.

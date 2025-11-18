@@ -29,6 +29,7 @@ class ScrollWheelDatePicker extends StatefulWidget {
     this.listenAfterAnimation = true,
     this.scrollBehavior,
     this.mode = ScrollWheelDatePickerMode.dayMonthYear,
+    this.hideOutOfRange = false,
   });
 
   /// The initial date for the [ScrollWheelDatePicker]. Defaults to [DateTime.now].
@@ -76,6 +77,16 @@ class ScrollWheelDatePicker extends StatefulWidget {
   /// [ScrollWheelDatePickerMode.yearOnly] - Shows only year.
   final ScrollWheelDatePickerMode mode;
 
+  /// Whether to hide dates outside the [startDate] and [lastDate] range.
+  /// 
+  /// When `false` (default), dates outside the range are shown but disabled (grayed out).
+  /// 
+  /// When `true`, only dates within the range are shown, making the selection cleaner.
+  /// 
+  /// This is particularly useful when [lastDate] is set to [DateTime.now()] and you don't
+  /// want to show future dates that cannot be selected.
+  final bool hideOutOfRange;
+
   @override
   State<ScrollWheelDatePicker> createState() => _ScrollWheelDatePickerState();
 }
@@ -92,6 +103,7 @@ class _ScrollWheelDatePickerState extends State<ScrollWheelDatePicker> {
       initialDate: widget.initialDate,
       startDate: widget.startDate,
       lastDate: widget.lastDate,
+      hideOutOfRange: widget.hideOutOfRange,
     );
   }
 

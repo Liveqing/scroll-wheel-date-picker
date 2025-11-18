@@ -203,6 +203,41 @@ ScrollWheelDatePicker(
 )
 ```
 
+### 3. 新增 hideOutOfRange 参数
+
+**需求描述**：当 `lastDate` 设置为 `DateTime.now()` 时，用户仍然可以看到今天之后的日期（虽然不可选择，但会置灰显示）。需要一个参数来控制是否完全隐藏这些超出范围的日期。
+
+**解决方案**：
+1. 在 `ScrollWheelDatePicker` 中添加了 `hideOutOfRange` 参数（默认为 `false`）
+2. 在 `DateController` 中实现了限制日期生成的逻辑
+3. 当 `hideOutOfRange = true` 且当前年月是 `lastDate` 的年月时，只生成到 `lastDate.day` 为止
+4. 在初始化和更新时都应用了这个限制
+
+**效果对比**：
+
+| hideOutOfRange | 行为描述 |
+|---------------|---------|
+| `false`（默认） | 显示所有日期，超出范围的日期置灰不可选 |
+| `true` | 只显示可选日期，超出范围的日期完全不显示 |
+
+**使用场景示例**：
+```dart
+// 只显示今天及之前的日期，不显示未来日期
+ScrollWheelDatePicker(
+  startDate: DateTime(2020, 1, 1),
+  initialDate: DateTime.now(),
+  lastDate: DateTime.now(),
+  hideOutOfRange: true, // 隐藏今天之后的日期
+  // ...
+)
+```
+
+**适用场景**：
+- ✅ 出生日期选择（不显示未来日期）
+- ✅ 历史事件日期选择
+- ✅ 任何只需要显示可选日期的场景
+- ✅ 提供更清晰、简洁的用户界面
+
 ---
 
 ## 🎯 总结
@@ -213,5 +248,12 @@ ScrollWheelDatePicker(
 2. ✅ 月份-年份
 3. ✅ 仅年份
 
-每种模式都经过充分测试，提供了示例代码，并更新了文档说明。Holo overlay的分割线数量问题也已修复！项目已经在运行中，您可以直接在浏览器中体验这些新功能！
+### 核心功能：
+- ✅ 三种日期选择器模式（dayMonthYear, monthYear, yearOnly）
+- ✅ 支持同一天选择（startDate、initialDate、lastDate 可以相同）
+- ✅ hideOutOfRange 参数（隐藏超出范围的日期）
+- ✅ Holo overlay 根据模式动态显示分割线数量
+- ✅ 完整的示例和文档
+
+每种模式都经过充分测试，提供了示例代码，并更新了文档说明。所有问题都已修复！项目已经在运行中，您可以直接在浏览器中体验这些新功能！
 

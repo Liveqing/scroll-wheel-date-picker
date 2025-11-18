@@ -27,7 +27,9 @@ class DateController with ChangeNotifier {
     DateTime? initialDate,
     DateTime? startDate,
     DateTime? lastDate,
+    bool hideOutOfRange = false,
   }) {
+    _hideOutOfRange = hideOutOfRange;
     if (startDate != null && lastDate != null) {
       assert(_isOnOrBefore(startDate, lastDate), "Start date must be on or before last date.");
     }
@@ -68,12 +70,19 @@ class DateController with ChangeNotifier {
     _startDate = startDate ?? DateTime.parse(defaultStartDate);
     _lastDate = lastDate ?? DateTime.parse(defaultLastDate);
 
+    // Calculate initial number of days
+    final int initYear = initialDate?.year ?? DateTime.now().year;
+    final int initMonth = initialDate?.month ?? DateTime.now().month;
+    int initNumberOfDays = _getNumberOfDays(year: initYear, month: initMonth);
+    
+    // When hideOutOfRange is true, limit the number of days based on lastDate
+    if (_hideOutOfRange && initYear == _lastDate.year && initMonth == _lastDate.month) {
+      initNumberOfDays = _lastDate.day;
+    }
+
     _dayController = _DayController(
       selectedIndex: initialDate != null ? initialDate.day - 1 : null,
-      numberOfDays: _getNumberOfDays(
-        year: initialDate?.year ?? DateTime.now().year,
-        month: initialDate?.month ?? DateTime.now().month,
-      ),
+      numberOfDays: initNumberOfDays,
     );
 
     _monthController = _MonthController(
@@ -133,6 +142,9 @@ class DateController with ChangeNotifier {
 
   /// Sets the last day of the day items selection.
   int? _lastDay;
+
+  /// Whether to hide dates outside the startDate and lastDate range.
+  late bool _hideOutOfRange;
 
   IDateController get dayController => _dayController;
   IDateController get monthController => _monthController;
@@ -238,7 +250,18 @@ class DateController with ChangeNotifier {
   /// Called when the [changeMonth] & [changeYear] is triggered.
   /// This is important so that the `total number of days` is updated when the month or year changes.
   void _updateNumberOfDays() {
-    final int numberOfDays = _getNumberOfDays(year: _yearController.selectedIndex, month: _monthController.selectedIndex);
+    int numberOfDays = _getNumberOfDays(year: _yearController.selectedIndex, month: _monthController.selectedIndex);
+    
+    // When hideOutOfRange is true, limit the number of days based on lastDate
+    if (_hideOutOfRange) {
+      final int currentYear = int.parse(_yearController.items[_yearController.selectedIndex]);
+      final int currentMonth = _monthController.selectedIndex + 1;
+      
+      // If current year-month matches lastDate year-month, limit to lastDate.day
+      if (currentYear == _lastDate.year && currentMonth == _lastDate.month) {
+        numberOfDays = _lastDate.day;
+      }
+    }
 
     final int selectedIndex = _dayController.selectedIndex >= numberOfDays ? numberOfDays - 1 : _dayController.selectedIndex;
 

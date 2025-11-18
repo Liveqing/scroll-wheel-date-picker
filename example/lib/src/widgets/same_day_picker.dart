@@ -124,7 +124,7 @@ class _SameDayPickerState extends State<SameDayPicker> {
                 margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
                 padding: const EdgeInsets.all(16.0),
                 child: ScrollWheelDatePicker(
-                  startDate: _today, // 今天
+                  startDate: DateTime(2020, 1, 1),
                   initialDate: _today, // 今天
                   lastDate: _today, // 今天
                   mode: ScrollWheelDatePickerMode.dayMonthYear,
