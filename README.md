@@ -116,6 +116,29 @@ ScrollWheelDatePicker(
 ),
 ```
 
+### Single Day Selection
+
+Allow users to select only today (or any specific date).
+
+```dart
+final today = DateTime.now();
+
+ScrollWheelDatePicker(
+  startDate: today,
+  initialDate: today,
+  lastDate: today,
+  loopDays: false,
+  loopMonths: false,
+  loopYears: false,
+  theme: FlatDatePickerTheme(
+    backgroundColor: Colors.white,
+    overlay: ScrollWheelDatePickerOverlay.highlight,
+    itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.black),
+    overlayColor: Colors.grey.withOpacity(0.2),
+  ),
+),
+```
+
 ### Year Only Picker
 
 Ideal for year of birth, graduation year, etc.

@@ -161,7 +161,7 @@ ScrollWheelDatePicker(
 
 ## 🐛 修复的问题
 
-### Holo Overlay 显示错误的分割线数量
+### 1. Holo Overlay 显示错误的分割线数量
 
 **问题描述**：当使用 `ScrollWheelDatePickerOverlay.holo` 时，无论选择什么模式，都会显示3对分割线（即使只有2个或1个滚轮）。
 
@@ -174,6 +174,34 @@ ScrollWheelDatePicker(
 - `dayMonthYear` 模式：显示 3 对分割线
 - `monthYear` 模式：显示 2 对分割线 ✅
 - `yearOnly` 模式：显示 1 对分割线
+
+### 2. 日期比较逻辑过于严格
+
+**问题描述**：原来的日期验证使用了严格的 `isAfter` 和 `isBefore` 比较，导致 `startDate`、`initialDate` 和 `lastDate` 不能设置为同一天。这在某些场景下（如只允许选择今天）是不合理的限制。
+
+**解决方案**：
+1. 添加了三个辅助函数：
+   - `_isOnOrBefore()`: 检查日期是否在指定日期当天或之前
+   - `_isOnOrAfter()`: 检查日期是否在指定日期当天或之后
+   - `_isSameDay()`: 检查两个日期是否是同一天
+2. 修改所有日期断言，使用新的比较函数替代严格比较
+3. 更新了所有相关方法：`DateController` 构造函数、`changeInitialDate()`、`changeStartDate()`、`changeLastDate()`
+
+**修复后的效果**：
+- ✅ `startDate`、`initialDate` 和 `lastDate` 可以是同一天
+- ✅ 允许创建只能选择单一日期的选择器
+- ✅ 支持 `DateTime.now()` 作为所有日期参数
+
+**使用场景示例**：
+```dart
+// 只允许选择今天
+ScrollWheelDatePicker(
+  startDate: DateTime.now(),
+  initialDate: DateTime.now(),
+  lastDate: DateTime.now(),
+  // ...
+)
+```
 
 ---
 
