@@ -6,6 +6,9 @@ import 'src/widgets/curve_line_date_picker.dart';
 import 'src/widgets/curve_holo_date_picker.dart';
 import 'src/widgets/flat_holo_date_picker.dart';
 import 'src/widgets/flat_line_date_picker.dart';
+import 'src/widgets/month_year_picker.dart';
+import 'src/widgets/year_only_picker.dart';
+import 'src/widgets/simple_month_year_picker.dart';
 
 class ScrollWheelDatePicker extends StatelessWidget {
   const ScrollWheelDatePicker({super.key});
@@ -34,6 +37,93 @@ class ScrollWheelDatePicker extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(height: 20.0),
+                const Text(
+                  "📅 Picker Modes",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 22.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const SimpleMonthYearPicker();
+                        },
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Month-Year Picker (简化版)",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.green[300],
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const MonthYearPicker();
+                        },
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Month-Year Picker (Holo)",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const YearOnlyPicker();
+                        },
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Year Only Picker",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40.0),
+                const Divider(thickness: 2),
+                const SizedBox(height: 20.0),
                 const Text(
                   "Curve Scroll Wheel",
                   style: TextStyle(

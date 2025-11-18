@@ -28,6 +28,7 @@ class ScrollWheelDatePicker extends StatefulWidget {
     required this.theme,
     this.listenAfterAnimation = true,
     this.scrollBehavior,
+    this.mode = ScrollWheelDatePickerMode.dayMonthYear,
   });
 
   /// The initial date for the [ScrollWheelDatePicker]. Defaults to [DateTime.now].
@@ -65,6 +66,15 @@ class ScrollWheelDatePicker extends StatefulWidget {
 
   /// Describes how [Scrollable] widgets should behave.
   final ScrollBehavior? scrollBehavior;
+
+  /// Determines which date components to display.
+  /// 
+  /// [ScrollWheelDatePickerMode.dayMonthYear] - Shows day, month, and year (default).
+  /// 
+  /// [ScrollWheelDatePickerMode.monthYear] - Shows only month and year.
+  /// 
+  /// [ScrollWheelDatePickerMode.yearOnly] - Shows only year.
+  final ScrollWheelDatePickerMode mode;
 
   @override
   State<ScrollWheelDatePicker> createState() => _ScrollWheelDatePickerState();
@@ -150,6 +160,18 @@ class _ScrollWheelDatePickerState extends State<ScrollWheelDatePicker> {
           );
   }
 
+  /// Gets the number of wheels based on the current mode.
+  int _getWheelCount() {
+    switch (widget.mode) {
+      case ScrollWheelDatePickerMode.dayMonthYear:
+        return 3;
+      case ScrollWheelDatePickerMode.monthYear:
+        return 2;
+      case ScrollWheelDatePickerMode.yearOnly:
+        return 1;
+    }
+  }
+
   /// Selects center overlay base on [ScrollWheelDatePickerOverlay].
   Widget _overlay() {
     switch (widget.theme.overlay) {
@@ -162,6 +184,7 @@ class _ScrollWheelDatePickerState extends State<ScrollWheelDatePicker> {
         return HoloOverlay(
           height: widget.theme.itemExtent,
           color: widget.theme.overlayColor,
+          wheelCount: _getWheelCount(),
         );
       case ScrollWheelDatePickerOverlay.line:
         return LineOverlay(
@@ -170,6 +193,110 @@ class _ScrollWheelDatePickerState extends State<ScrollWheelDatePicker> {
         );
       default:
         return const SizedBox.shrink();
+    }
+  }
+
+  /// Builds the appropriate wheels based on the selected [ScrollWheelDatePickerMode].
+  List<Widget> _buildWheels() {
+    switch (widget.mode) {
+      case ScrollWheelDatePickerMode.dayMonthYear:
+        return [
+          // Days
+          Expanded(
+            child: ListenableBuilder(
+              listenable: _dateController,
+              builder: (_, __) {
+                return _scrollWidget(
+                  controller: _dateController.dayController,
+                  controllerItemChanged: (value) {
+                    _dateController.changeDay(day: value);
+                    widget.onSelectedItemChanged?.call(_dateController.dateTime);
+                  },
+                  looping: widget.loopDays,
+                  startOffset: _dateController.startDay,
+                  lastOffset: _dateController.lastDay,
+                );
+              },
+            ),
+          ),
+          // Months
+          Expanded(
+            child: ListenableBuilder(
+              listenable: _dateController,
+              builder: (_, __) {
+                return _scrollWidget(
+                  controller: _dateController.monthController,
+                  controllerItemChanged: (value) {
+                    _dateController.changeMonth(month: value);
+                    widget.onSelectedItemChanged?.call(_dateController.dateTime);
+                  },
+                  looping: widget.loopMonths,
+                  startOffset: _dateController.startMonth,
+                  lastOffset: _dateController.lastMonth,
+                );
+              },
+            ),
+          ),
+          // Years
+          Expanded(
+            child: _scrollWidget(
+              controller: _dateController.yearController,
+              controllerItemChanged: (value) {
+                _dateController.changeYear(year: value);
+                widget.onSelectedItemChanged?.call(_dateController.dateTime);
+              },
+              looping: widget.loopYears,
+            ),
+          ),
+        ];
+
+      case ScrollWheelDatePickerMode.monthYear:
+        return [
+          // Months
+          Expanded(
+            child: ListenableBuilder(
+              listenable: _dateController,
+              builder: (_, __) {
+                return _scrollWidget(
+                  controller: _dateController.monthController,
+                  controllerItemChanged: (value) {
+                    _dateController.changeMonth(month: value);
+                    widget.onSelectedItemChanged?.call(_dateController.dateTime);
+                  },
+                  looping: widget.loopMonths,
+                  startOffset: _dateController.startMonth,
+                  lastOffset: _dateController.lastMonth,
+                );
+              },
+            ),
+          ),
+          // Years
+          Expanded(
+            child: _scrollWidget(
+              controller: _dateController.yearController,
+              controllerItemChanged: (value) {
+                _dateController.changeYear(year: value);
+                widget.onSelectedItemChanged?.call(_dateController.dateTime);
+              },
+              looping: widget.loopYears,
+            ),
+          ),
+        ];
+
+      case ScrollWheelDatePickerMode.yearOnly:
+        return [
+          // Years only
+          Expanded(
+            child: _scrollWidget(
+              controller: _dateController.yearController,
+              controllerItemChanged: (value) {
+                _dateController.changeYear(year: value);
+                widget.onSelectedItemChanged?.call(_dateController.dateTime);
+              },
+              looping: widget.loopYears,
+            ),
+          ),
+        ];
     }
   }
 
@@ -193,57 +320,8 @@ class _ScrollWheelDatePickerState extends State<ScrollWheelDatePicker> {
             blendMode: BlendMode.dstOut,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Days
-                Expanded(
-                  child: ListenableBuilder(
-                    listenable: _dateController,
-                    builder: (_, __) {
-                      return _scrollWidget(
-                        controller: _dateController.dayController,
-                        controllerItemChanged: (value) {
-                          _dateController.changeDay(day: value);
-                          widget.onSelectedItemChanged?.call(_dateController.dateTime);
-                        },
-                        looping: widget.loopDays,
-                        startOffset: _dateController.startDay,
-                        lastOffset: _dateController.lastDay,
-                      );
-                    },
-                  ),
-                ),
-
-                // Months
-                Expanded(
-                  child: ListenableBuilder(
-                    listenable: _dateController,
-                    builder: (_, __) {
-                      return _scrollWidget(
-                        controller: _dateController.monthController,
-                        controllerItemChanged: (value) {
-                          _dateController.changeMonth(month: value);
-                          widget.onSelectedItemChanged?.call(_dateController.dateTime);
-                        },
-                        looping: widget.loopMonths,
-                        startOffset: _dateController.startMonth,
-                        lastOffset: _dateController.lastMonth,
-                      );
-                    },
-                  ),
-                ),
-
-                //Years
-                Expanded(
-                  child: _scrollWidget(
-                    controller: _dateController.yearController,
-                    controllerItemChanged: (value) {
-                      _dateController.changeYear(year: value);
-                      widget.onSelectedItemChanged?.call(_dateController.dateTime);
-                    },
-                    looping: widget.loopYears,
-                  ),
-                ),
-              ],
+              mainAxisSize: MainAxisSize.max,
+              children: _buildWheels(),
             ),
           ),
         ),

@@ -7,9 +7,18 @@ Or maybe, you also resorted using [ListWheelScrollView](https://api.flutter.dev/
 
 This package supports a wheel-type date-picker that has two scroll types: [CurveScrollWheel](https://github.com/Fingertips18/scroll-wheel-date-picker/blob/main/lib/src/widgets/curve_scroll_wheel.dart) and [FlatScrollWheel](https://github.com/Fingertips18/scroll-wheel-date-picker/blob/main/lib/src/widgets/flat_scroll_wheel.dart).
 
+**NEW! 🎉** Now supports multiple picker modes: Full date (Day-Month-Year), Month-Year only, and Year only!
+
 ## Features
 
 `ScrollWheelDatePicker` uses `ListWheelScrollView` for the `CurveScrollWheel` underneath. However, some features were added and modified in order to have the same functionality but without the curve perspective in `FlatScrollWheel`.
+
+#### Multiple Picker Modes
+
+Choose from three different display modes to suit your needs:
+- **Day-Month-Year** (default): Full date selection with all three components
+- **Month-Year**: Select only month and year, perfect for credit card expiry dates or birth month selection
+- **Year Only**: Select just the year, ideal for year of birth or year ranges
 
 #### Centered Selected Item
 
@@ -72,6 +81,8 @@ import 'package:scroll_wheel_date_picker/scroll_wheel_date_picker.dart';
 
 And use like this...
 
+### Default Day-Month-Year Picker
+
 ```dart
 ScrollWheelDatePicker(
   theme: FlatDatePickerTheme(
@@ -80,6 +91,48 @@ ScrollWheelDatePicker(
     itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.black),
     overlayColor: Colors.black,
     overAndUnderCenterOpacity: 0.2,
+  ),
+),
+```
+
+### Month-Year Picker
+
+Perfect for credit card expiry dates, birth month selection, etc.
+
+```dart
+ScrollWheelDatePicker(
+  mode: ScrollWheelDatePickerMode.monthYear,
+  initialDate: DateTime.now(),
+  onSelectedItemChanged: (date) {
+    print('Selected: ${date.month}/${date.year}');
+  },
+  theme: FlatDatePickerTheme(
+    backgroundColor: Colors.white,
+    overlay: ScrollWheelDatePickerOverlay.holo,
+    itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.black),
+    overlayColor: Colors.blueAccent,
+    overAndUnderCenterOpacity: 0.3,
+  ),
+),
+```
+
+### Year Only Picker
+
+Ideal for year of birth, graduation year, etc.
+
+```dart
+ScrollWheelDatePicker(
+  mode: ScrollWheelDatePickerMode.yearOnly,
+  startDate: DateTime(1950, 1, 1),
+  lastDate: DateTime(2050, 12, 31),
+  initialDate: DateTime.now(),
+  onSelectedItemChanged: (date) {
+    print('Selected year: ${date.year}');
+  },
+  theme: CurveDatePickerTheme(
+    overlay: ScrollWheelDatePickerOverlay.highlight,
+    itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.black),
+    overlayColor: Colors.blueAccent.withOpacity(0.2),
   ),
 ),
 ```

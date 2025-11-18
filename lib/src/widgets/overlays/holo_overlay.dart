@@ -8,6 +8,7 @@ class HoloOverlay extends StatelessWidget {
     super.key,
     required this.height,
     this.color,
+    this.wheelCount = 3,
   });
 
   /// Gap between the lines of [HoloOverlay].
@@ -16,64 +17,45 @@ class HoloOverlay extends StatelessWidget {
   /// Lines color.
   final Color? color;
 
+  /// Number of wheels to display (1, 2, or 3).
+  final int wheelCount;
+
+  /// Builds a single wheel border container.
+  Widget _buildWheelBorder() {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: color ?? Colors.white,
+              width: defaultModeBorderThickness,
+            ),
+            bottom: BorderSide(
+              color: color ?? Colors.white,
+              width: defaultModeBorderThickness,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> children = [];
+    
+    for (int i = 0; i < wheelCount; i++) {
+      if (i > 0) {
+        children.add(const SizedBox(width: defaultModeSpacing));
+      }
+      children.add(_buildWheelBorder());
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: defaultModeMargin),
       height: height,
       child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: color ?? Colors.white,
-                    width: defaultModeBorderThickness,
-                  ),
-                  bottom: BorderSide(
-                    color: color ?? Colors.white,
-                    width: defaultModeBorderThickness,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: defaultModeSpacing),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: color ?? Colors.white,
-                    width: defaultModeBorderThickness,
-                  ),
-                  bottom: BorderSide(
-                    color: color ?? Colors.white,
-                    width: defaultModeBorderThickness,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: defaultModeSpacing),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: color ?? Colors.white,
-                    width: defaultModeBorderThickness,
-                  ),
-                  bottom: BorderSide(
-                    color: color ?? Colors.white,
-                    width: defaultModeBorderThickness,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        children: children,
       ),
     );
   }

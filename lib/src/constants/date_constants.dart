@@ -30,6 +30,19 @@ enum MonthFormat {
   twoLetters,
 }
 
+/// Enum for scroll wheel date picker display modes.
+/// 
+/// [dayMonthYear] - Displays day, month and year pickers (default).
+/// 
+/// [monthYear] - Displays only month and year pickers.
+/// 
+/// [yearOnly] - Displays only year picker.
+enum ScrollWheelDatePickerMode {
+  dayMonthYear,
+  monthYear,
+  yearOnly,
+}
+
 /// Default value of [DateController]'s start date.
 const String defaultStartDate = "1900-01-01 00:00:00";
 
