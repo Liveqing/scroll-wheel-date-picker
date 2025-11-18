@@ -1,5 +1,6 @@
 import 'package:scroll_wheel_date_picker/scroll_wheel_date_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 /// Example of a year-only picker using ScrollWheelDatePicker
 /// This demonstrates the yearOnly mode which displays only year selection
@@ -57,8 +58,10 @@ class _YearOnlyPickerState extends State<YearOnlyPicker> {
                 mode: ScrollWheelDatePickerMode.yearOnly,
                 loopYears: false,
                 onSelectedItemChanged: (date) {
-                  setState(() {
-                    _selectedDate = date;
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      _selectedDate = date;
+                    });
                   });
                 },
                 theme: CurveDatePickerTheme(

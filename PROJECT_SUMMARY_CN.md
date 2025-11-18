@@ -209,16 +209,19 @@ ScrollWheelDatePicker(
 
 **解决方案**：
 1. 在 `ScrollWheelDatePicker` 中添加了 `hideOutOfRange` 参数（默认为 `false`）
-2. 在 `DateController` 中实现了限制日期生成的逻辑
-3. 当 `hideOutOfRange = true` 且当前年月是 `lastDate` 的年月时，只生成到 `lastDate.day` 为止
-4. 在初始化和更新时都应用了这个限制
+2. 修改 `_MonthController` 支持 `numberOfMonths` 参数，可以限制显示的月份数量
+3. 在 `DateController` 中实现了限制日期和月份生成的逻辑：
+   - 当 `hideOutOfRange = true` 且当前年是 `lastDate` 的年份时，只生成到 `lastDate.month` 为止
+   - 当 `hideOutOfRange = true` 且当前年月是 `lastDate` 的年月时，只生成到 `lastDate.day` 为止
+4. 在初始化和年份切换时都应用了这个限制，避免出现滚动抖动问题
+5. 使用 `SchedulerBinding.instance.addPostFrameCallback` 延迟通知，确保在当前帧完成后再触发 rebuild，彻底避免 build 期间 setState 的错误
 
-**效果对比**：
+**效果对比**（假设今天是2024年11月18日）：
 
-| hideOutOfRange | 行为描述 |
-|---------------|---------|
-| `false`（默认） | 显示所有日期，超出范围的日期置灰不可选 |
-| `true` | 只显示可选日期，超出范围的日期完全不显示 |
+| hideOutOfRange | 月份显示 | 日期显示 | 滚动体验 |
+|---------------|---------|---------|---------|
+| `false`（默认） | 显示1-12月（12月后置灰） | 显示1-30日（18日后置灰） | 可以滚动到所有项 |
+| `true` | 只显示1-11月 | 只显示1-18日 | 无法滚动到超出范围的项，避免抖动 |
 
 **使用场景示例**：
 ```dart

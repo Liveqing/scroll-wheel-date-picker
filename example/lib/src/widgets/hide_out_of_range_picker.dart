@@ -1,5 +1,6 @@
 import 'package:scroll_wheel_date_picker/scroll_wheel_date_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 /// 测试hideOutOfRange参数的示例
 /// 演示隐藏超出范围日期的效果
@@ -59,21 +60,21 @@ class _HideOutOfRangePickerState extends State<HideOutOfRangePicker> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'lastDate 设置为今天（${_today.month}月${_today.day}日）\n两个选择器的区别：',
+                    'lastDate 设置为今天（${_today.year}年${_today.month}月${_today.day}日）\n两个选择器的区别：',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    '上方：hideOutOfRange = false（默认）\n显示所有日期，超出的置灰不可选',
+                    '上方：hideOutOfRange = false（默认）\n显示所有月份和日期，超出的置灰不可选',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    '下方：hideOutOfRange = true\n只显示可选日期，超出的完全不显示',
+                  Text(
+                    '下方：hideOutOfRange = true\n只显示1-${_today.month}月和1-${_today.day}号，超出的完全不显示',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                 ],
               ),
@@ -137,8 +138,10 @@ class _HideOutOfRangePickerState extends State<HideOutOfRangePicker> {
                 loopMonths: false,
                 loopYears: false,
                 onSelectedItemChanged: (date) {
-                  setState(() {
-                    _selectedDate1 = date;
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      _selectedDate1 = date;
+                    });
                   });
                 },
                 theme: FlatDatePickerTheme(
@@ -160,7 +163,7 @@ class _HideOutOfRangePickerState extends State<HideOutOfRangePicker> {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                '👆 可以看到本月所有日期，但今天之后的日期置灰不可选',
+                '👆 可以看到全部12个月和本月所有日期\n但今天之后的月份和日期置灰不可选',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
@@ -226,8 +229,10 @@ class _HideOutOfRangePickerState extends State<HideOutOfRangePicker> {
                 loopMonths: false,
                 loopYears: false,
                 onSelectedItemChanged: (date) {
-                  setState(() {
-                    _selectedDate2 = date;
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      _selectedDate2 = date;
+                    });
                   });
                 },
                 theme: FlatDatePickerTheme(
@@ -249,7 +254,7 @@ class _HideOutOfRangePickerState extends State<HideOutOfRangePicker> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                '👆 只显示1-${_today.day}号，今天之后的日期完全不显示 ✨',
+                '👆 只显示1-${_today.month}月，每月只显示1-${_today.day}号\n今天之后的月份和日期完全不显示 ✨',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 12,

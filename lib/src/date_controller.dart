@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'widgets/scroll_wheel_date_picker.dart';
 import 'widgets/curve_scroll_wheel.dart';
@@ -85,8 +86,17 @@ class DateController with ChangeNotifier {
       numberOfDays: initNumberOfDays,
     );
 
+    // Calculate initial number of months (reuse initYear from above)
+    int initNumberOfMonths = 12;
+    
+    // When hideOutOfRange is true, limit the number of months based on lastDate
+    if (_hideOutOfRange && initYear == _lastDate.year) {
+      initNumberOfMonths = _lastDate.month;
+    }
+
     _monthController = _MonthController(
       selectedIndex: initialDate != null ? initialDate.month - 1 : null,
+      numberOfMonths: initNumberOfMonths,
     );
 
     _yearController = _YearController(
@@ -184,9 +194,15 @@ class DateController with ChangeNotifier {
       _lastDay = null;
     }
 
-    _updateNumberOfDays();
+    // Update number of days without notifying listeners immediately
+    _updateNumberOfDays(shouldNotify: false);
 
     _dateTime = _dateTime.copyWith(month: month + 1);
+    
+    // Delay notification until after the current frame to avoid build conflicts
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   /// Called when a [MonthFormat] is given or changed in the [ScrollWheelDatePicker] constructor.
@@ -238,9 +254,34 @@ class DateController with ChangeNotifier {
       _lastDay = null;
     }
 
-    _updateNumberOfDays();
+    // When hideOutOfRange is true, update the number of months
+    if (_hideOutOfRange) {
+      int numberOfMonths = 12;
+      if (year == _lastDate.year) {
+        numberOfMonths = _lastDate.month;
+      }
+      
+      // Update month controller with the new number of months
+      final int currentSelectedMonth = _monthController.selectedIndex;
+      final int adjustedSelectedMonth = currentSelectedMonth >= numberOfMonths 
+          ? numberOfMonths - 1 
+          : currentSelectedMonth;
+      
+      _monthController = _monthController.copyWith(
+        selectedIndex: adjustedSelectedMonth,
+        numberOfMonths: numberOfMonths,
+      );
+    }
+
+    // Update number of days without notifying listeners immediately
+    _updateNumberOfDays(shouldNotify: false);
 
     _dateTime = _dateTime.copyWith(year: year);
+    
+    // Delay notification until after the current frame to avoid build conflicts
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   /// Handles the change of the total number of days base on the selected month.
@@ -249,7 +290,7 @@ class DateController with ChangeNotifier {
   ///
   /// Called when the [changeMonth] & [changeYear] is triggered.
   /// This is important so that the `total number of days` is updated when the month or year changes.
-  void _updateNumberOfDays() {
+  void _updateNumberOfDays({bool shouldNotify = true}) {
     int numberOfDays = _getNumberOfDays(year: _yearController.selectedIndex, month: _monthController.selectedIndex);
     
     // When hideOutOfRange is true, limit the number of days based on lastDate
@@ -267,7 +308,9 @@ class DateController with ChangeNotifier {
 
     _dayController = _dayController.copyWith(selectedIndex: selectedIndex, numberOfDays: numberOfDays);
 
-    notifyListeners();
+    if (shouldNotify) {
+      notifyListeners();
+    }
   }
 
   /// Called when the [initialDate] of the [ScrollWheelDatePicker] changed.
@@ -374,9 +417,11 @@ class _MonthController implements IDateController {
   const _MonthController._({
     required MonthFormat monthFormat,
     required int selectedIndex,
+    required int numberOfMonths,
     required List<String> months,
   })  : _monthFormat = monthFormat,
         _selectedIndex = selectedIndex,
+        _numberOfMonths = numberOfMonths,
         _months = months;
 
   /// Currently selected index. Can be updated with [copyWith].
@@ -385,23 +430,31 @@ class _MonthController implements IDateController {
   /// Applies the format of the months. Can be updated with [copyWith].
   final MonthFormat _monthFormat;
 
+  /// Total number of months to display. Can be updated with [copyWith].
+  final int _numberOfMonths;
+
   /// Collection of months in [String] type.
   final List<String> _months;
 
   factory _MonthController({
     MonthFormat? monthFormat,
     int? selectedIndex,
+    int? numberOfMonths,
   }) {
     final MonthFormat format = monthFormat ?? MonthFormat.full;
+    final int numMonths = numberOfMonths ?? 12;
+    final List<String> allMonths = _generateMonths(monthFormat: format);
 
     return _MonthController._(
       monthFormat: format,
       selectedIndex: selectedIndex ?? DateTime.now().month - 1,
-      months: _generateMonths(monthFormat: format),
+      numberOfMonths: numMonths,
+      months: allMonths.sublist(0, numMonths),
     );
   }
 
   MonthFormat get monthFormat => _monthFormat;
+  int get numberOfMonths => _numberOfMonths;
   @override
   int get selectedIndex => _selectedIndex;
   @override
@@ -411,10 +464,12 @@ class _MonthController implements IDateController {
   _MonthController copyWith({
     MonthFormat? monthFormat,
     int? selectedIndex,
+    int? numberOfMonths,
   }) =>
       _MonthController(
         monthFormat: monthFormat ?? _monthFormat,
         selectedIndex: selectedIndex ?? _selectedIndex,
+        numberOfMonths: numberOfMonths ?? _numberOfMonths,
       );
 }
 

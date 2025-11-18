@@ -1,5 +1,6 @@
 import 'package:scroll_wheel_date_picker/scroll_wheel_date_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 /// 简化的月份-年份选择器示例
 /// 用于调试和确认只显示2个滚轮
@@ -97,8 +98,10 @@ class _SimpleMonthYearPickerState extends State<SimpleMonthYearPicker> {
                   loopMonths: true,
                   loopYears: false,
                   onSelectedItemChanged: (date) {
-                    setState(() {
-                      _selectedDate = date;
+                    SchedulerBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        _selectedDate = date;
+                      });
                     });
                   },
                   theme: FlatDatePickerTheme(

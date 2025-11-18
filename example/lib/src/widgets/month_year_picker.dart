@@ -1,5 +1,6 @@
 import 'package:scroll_wheel_date_picker/scroll_wheel_date_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 /// Example of a month-year picker using ScrollWheelDatePicker
 /// This demonstrates the monthYear mode which displays only month and year
@@ -58,8 +59,10 @@ class _MonthYearPickerState extends State<MonthYearPicker> {
                 loopMonths: true,
                 loopYears: false,
                 onSelectedItemChanged: (date) {
-                  setState(() {
-                    _selectedDate = date;
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      _selectedDate = date;
+                    });
                   });
                 },
                 theme: FlatDatePickerTheme(

@@ -1,5 +1,6 @@
 import 'package:scroll_wheel_date_picker/scroll_wheel_date_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 /// 测试同一天选择的示例
 /// 验证 startDate, initialDate, lastDate 可以是同一天
@@ -132,8 +133,10 @@ class _SameDayPickerState extends State<SameDayPicker> {
                   loopMonths: false,
                   loopYears: false,
                   onSelectedItemChanged: (date) {
-                    setState(() {
-                      _selectedDate = date;
+                    SchedulerBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        _selectedDate = date;
+                      });
                     });
                   },
                   theme: FlatDatePickerTheme(
