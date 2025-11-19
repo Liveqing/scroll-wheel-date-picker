@@ -191,6 +191,7 @@ class _ScrollWheelDatePickerState extends State<ScrollWheelDatePicker> {
         return HightlightOverlay(
           height: widget.theme.itemExtent,
           color: widget.theme.overlayColor,
+          margin: widget.theme.overlayMargin,
         );
       case ScrollWheelDatePickerOverlay.holo:
         return HoloOverlay(

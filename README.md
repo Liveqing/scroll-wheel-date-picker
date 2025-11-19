@@ -28,6 +28,10 @@ Just like using `CupertinoDatePicker` or `ListWheelScrollView`, it allows you to
 
 You can choose what type of overlay you want to have on the current selected item. `holo`, `highlight`, and `line` are some of the overlays to choose for. If you don't want any overlays you can just set it to `none`. (Expect additional overlays or the option to add your own soon..)
 
+#### Customizable Overlay Margin
+
+You can customize the horizontal margin (padding) around the overlay to fine-tune its appearance. The `overlayMargin` parameter allows you to adjust the left and right spacing of the overlay element. This works with all overlay types (`holo`, `highlight`, and `line`). The default margin is `8.0` pixels. Set it to `0.0` for no margin, or increase it for more spacing.
+
 #### Month Format
 
 It allows you to select what type of month format you want to display. The available formats are `full` which simply means the complete name of the month, `threeLetters` and `twoLetters` basically formats the months based on their common abbreviations with the letter count.
@@ -178,6 +182,35 @@ ScrollWheelDatePicker(
     overlay: ScrollWheelDatePickerOverlay.highlight,
     itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.black),
     overlayColor: Colors.blueAccent.withOpacity(0.2),
+  ),
+),
+```
+
+### Custom Overlay Margin
+
+Customize the horizontal spacing around the overlay for different visual effects.
+
+```dart
+ScrollWheelDatePicker(
+  theme: FlatDatePickerTheme(
+    backgroundColor: Colors.grey[900]!,
+    overlay: ScrollWheelDatePickerOverlay.highlight,
+    overlayMargin: 20.0, // Custom margin (default is 8.0)
+    itemTextStyle: defaultItemTextStyle,
+    overlayColor: Colors.blueAccent.withOpacity(0.3),
+  ),
+),
+```
+
+Set to `0.0` for no margin (full width overlay):
+
+```dart
+ScrollWheelDatePicker(
+  theme: CurveDatePickerTheme(
+    overlay: ScrollWheelDatePickerOverlay.highlight,
+    overlayMargin: 0.0, // No margin - full width
+    itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.white),
+    overlayColor: Colors.purple.withOpacity(0.2),
   ),
 ),
 ```

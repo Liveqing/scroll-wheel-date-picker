@@ -321,3 +321,79 @@ ScrollWheelDatePicker(
 - **其他年份**：
   - 显示所有12个月和每月的所有日期
 
+### 5. Overlay 边距自定义功能
+
+**需求描述**：在使用 `ScrollWheelDatePickerOverlay.highlight` 模式时，Overlay 左右两边没有边距，希望能够自定义这个边距参数。
+
+**解决方案**：
+
+1. **修改 HightlightOverlay 组件**：
+   - 添加 `margin` 参数（可选的 `double?` 类型）
+   - 使用 `EdgeInsets.symmetric(horizontal: margin ?? defaultModeMargin)` 添加水平边距
+   - 默认值为 `defaultModeMargin`（8.0），与其他 overlay 保持一致
+
+2. **扩展主题类**：
+   - 在 `ScrollWheelDatePickerTheme` 基类中添加 `overlayMargin` 参数
+   - 在 `CurveDatePickerTheme` 和 `FlatDatePickerTheme` 子类中传递该参数
+   - 详细的文档注释说明参数用途和默认值
+
+3. **更新核心组件**：
+   - 在 `ScrollWheelDatePicker` 的 `_overlay()` 方法中，将 `theme.overlayMargin` 传递给 `HightlightOverlay`
+   - 所有 overlay 类型（highlight、holo、line）现在都支持统一的边距参数
+
+4. **创建交互式示例**：
+   - 新建 `custom_margin_picker.dart` 示例页面
+   - 提供滑块控件，可以动态调整边距（0-50px）
+   - 实时预览不同边距的视觉效果
+   - 显示当前边距数值
+
+5. **完善文档**：
+   - 在 `README.md` 中添加 "Customizable Overlay Margin" 功能说明
+   - 提供两个使用示例：自定义边距（20.0）和无边距（0.0）
+   - 在中文总结文档中添加详细的功能说明
+
+**修复后的效果**：
+- ✅ Highlight Overlay 默认有 8px 的左右边距
+- ✅ 可以通过 `overlayMargin` 参数自定义边距大小
+- ✅ 设置为 `0.0` 可实现全宽度 overlay（无边距）
+- ✅ 设置更大的值可以增加边距，适应不同的设计需求
+- ✅ 所有 overlay 类型都支持此参数
+
+**使用场景示例**：
+
+```dart
+// 自定义边距
+ScrollWheelDatePicker(
+  theme: FlatDatePickerTheme(
+    backgroundColor: Colors.grey[900]!,
+    overlay: ScrollWheelDatePickerOverlay.highlight,
+    overlayMargin: 20.0, // 自定义边距（默认是 8.0）
+    itemTextStyle: defaultItemTextStyle,
+    overlayColor: Colors.blueAccent.withOpacity(0.3),
+  ),
+)
+
+// 无边距（全宽度）
+ScrollWheelDatePicker(
+  theme: CurveDatePickerTheme(
+    overlay: ScrollWheelDatePickerOverlay.highlight,
+    overlayMargin: 0.0, // 无边距 - 全宽度
+    itemTextStyle: defaultItemTextStyle.copyWith(color: Colors.white),
+    overlayColor: Colors.purple.withOpacity(0.2),
+  ),
+)
+```
+
+**适用场景**：
+- ✅ 精细调整 UI 外观以匹配设计稿
+- ✅ 不同屏幕尺寸下的自适应布局
+- ✅ 创建不同风格的日期选择器（紧凑型 vs 宽松型）
+- ✅ 与其他 UI 组件保持视觉一致性
+
+**新增示例页面**：
+- **自定义 Overlay 边距测试页**：
+  - 实时滑块调整边距（0-50px）
+  - 动态预览边距变化效果
+  - 显示当前边距数值
+  - 位于主页面"📅 Picker Modes"区域
+

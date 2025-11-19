@@ -17,6 +17,8 @@ class FlatDatePickerTheme extends ScrollWheelDatePickerTheme {
   ///
   /// [overlayColor] Selected item's center design color. Defaults to [Colors.black].
   ///
+  /// [overlayMargin] Horizontal margin around the overlay. Defaults to [defaultModeMargin].
+  ///
   /// [fadeEdges] Apply vertical faded-edges to smoothly transition overlapping items. Defaults to `true`.
   ///
   /// [backgroundColor] Overlay color of the [ScrollWheelDatePicker] items that are off centered. Defaults to [Colors.transparent].
@@ -29,6 +31,7 @@ class FlatDatePickerTheme extends ScrollWheelDatePickerTheme {
     super.itemTextStyle,
     super.overlay,
     super.overlayColor,
+    super.overlayMargin,
     required this.backgroundColor,
     super.fadeEdges,
   });

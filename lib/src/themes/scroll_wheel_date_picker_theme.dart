@@ -26,6 +26,8 @@ abstract class ScrollWheelDatePickerTheme {
   ///
   /// [overlayColor] Selected item's center design color.
   ///
+  /// [overlayMargin] Horizontal margin around the overlay. Defaults to [defaultModeMargin].
+  ///
   /// [fadeEdges] Apply vertical faded-edges to smoothly transition overlapping items. Defaults to `true`.
   ScrollWheelDatePickerTheme({
     this.wheelPickerHeight = defaultWheelPickerHeight,
@@ -35,6 +37,7 @@ abstract class ScrollWheelDatePickerTheme {
     this.itemTextStyle,
     this.overlay = ScrollWheelDatePickerOverlay.holo,
     this.overlayColor,
+    this.overlayMargin,
     this.fadeEdges = true,
   });
 
@@ -70,6 +73,12 @@ abstract class ScrollWheelDatePickerTheme {
   ///
   /// If overlay is [ScrollWheelDatePickerOverlay.line] then this defaults to [Colors.white].
   final Color? overlayColor;
+
+  /// Horizontal margin around the overlay. Defaults to [defaultModeMargin].
+  /// 
+  /// This affects all overlay types (highlight, holo, and line).
+  /// Set to `0.0` for no margin.
+  final double? overlayMargin;
 
   /// Apply vertical faded-edges to smoothly transition overlapping items. Defaults to `true`.
   final bool fadeEdges;

@@ -9,6 +9,7 @@ class HightlightOverlay extends StatelessWidget {
     super.key,
     required this.height,
     this.color,
+    this.margin,
   });
 
   /// Actual height of the [HightlightOverlay].
@@ -17,13 +18,18 @@ class HightlightOverlay extends StatelessWidget {
   /// Background color.
   final Color? color;
 
+  /// Horizontal margin around the overlay. Defaults to [defaultModeMargin] if not specified.
+  final double? margin;
+
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: EdgeInsets.symmetric(horizontal: margin ?? defaultModeMargin),
       height: height,
       decoration: BoxDecoration(
         color: color ?? Colors.grey.withOpacity(defaultOpacity),
-        borderRadius: BorderRadius.circular(CupertinoContextMenu.kOpenBorderRadius),
+        borderRadius:
+            BorderRadius.circular(CupertinoContextMenu.kOpenBorderRadius),
       ),
     );
   }
