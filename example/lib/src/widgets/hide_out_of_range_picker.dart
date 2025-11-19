@@ -221,7 +221,7 @@ class _HideOutOfRangePickerState extends State<HideOutOfRangePicker> {
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               padding: const EdgeInsets.all(16),
               child: ScrollWheelDatePicker(
-                startDate: DateTime(2020, 1, 1),
+                startDate: DateTime(2020, 2, 5),
                 initialDate: _today,
                 lastDate: _today, // 只能选择到今天
                 hideOutOfRange: true, // 隐藏超出范围的日期

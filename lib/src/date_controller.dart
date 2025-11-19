@@ -75,28 +75,48 @@ class DateController with ChangeNotifier {
     final int initYear = initialDate?.year ?? DateTime.now().year;
     final int initMonth = initialDate?.month ?? DateTime.now().month;
     int initNumberOfDays = _getNumberOfDays(year: initYear, month: initMonth);
+    int initStartDay = 1; // Default start day is 1
     
-    // When hideOutOfRange is true, limit the number of days based on lastDate
-    if (_hideOutOfRange && initYear == _lastDate.year && initMonth == _lastDate.month) {
-      initNumberOfDays = _lastDate.day;
+    // When hideOutOfRange is true, limit the number of days based on startDate and lastDate
+    if (_hideOutOfRange) {
+      // Check if we need to limit days from the start
+      if (initYear == _startDate.year && initMonth == _startDate.month) {
+        initStartDay = _startDate.day;
+        initNumberOfDays = initNumberOfDays - _startDate.day + 1;
+      }
+      // Check if we need to limit days from the end
+      if (initYear == _lastDate.year && initMonth == _lastDate.month) {
+        initNumberOfDays = _lastDate.day - initStartDay + 1;
+      }
     }
 
     _dayController = _DayController(
-      selectedIndex: initialDate != null ? initialDate.day - 1 : null,
+      selectedIndex: initialDate != null ? initialDate.day - initStartDay : null,
       numberOfDays: initNumberOfDays,
+      startDay: initStartDay,
     );
 
     // Calculate initial number of months (reuse initYear from above)
     int initNumberOfMonths = 12;
+    int initStartMonth = 1; // Default start month is 1 (January)
     
-    // When hideOutOfRange is true, limit the number of months based on lastDate
-    if (_hideOutOfRange && initYear == _lastDate.year) {
-      initNumberOfMonths = _lastDate.month;
+    // When hideOutOfRange is true, limit the number of months based on startDate and lastDate
+    if (_hideOutOfRange) {
+      // Check if we need to limit months from the start
+      if (initYear == _startDate.year) {
+        initStartMonth = _startDate.month;
+        initNumberOfMonths = 12 - _startDate.month + 1;
+      }
+      // Check if we need to limit months from the end
+      if (initYear == _lastDate.year) {
+        initNumberOfMonths = _lastDate.month - initStartMonth + 1;
+      }
     }
 
     _monthController = _MonthController(
-      selectedIndex: initialDate != null ? initialDate.month - 1 : null,
+      selectedIndex: initialDate != null ? initialDate.month - initStartMonth : null,
       numberOfMonths: initNumberOfMonths,
+      startMonth: initStartMonth,
     );
 
     _yearController = _YearController(
@@ -160,26 +180,31 @@ class DateController with ChangeNotifier {
   IDateController get monthController => _monthController;
   IDateController get yearController => _yearController;
   DateTime get dateTime => _dateTime;
-  int? get startMonth => _startMonth;
-  int? get lastMonth => _lastMonth;
-  int? get startDay => _startDay;
-  int? get lastDay => _lastDay;
+  int? get startMonth => _hideOutOfRange ? null : _startMonth;
+  int? get lastMonth => _hideOutOfRange ? null : _lastMonth;
+  int? get startDay => _hideOutOfRange ? null : _startDay;
+  int? get lastDay => _hideOutOfRange ? null : _lastDay;
 
   /// Called when the selected item of the days [CurveScrollWheel] or [FlatScrollWheel] changed.
   void changeDay({required int day}) {
     _dayController = _dayController.copyWith(selectedIndex: day);
 
-    _dateTime = _dateTime.copyWith(day: day + 1);
+    // Calculate the actual day value based on startDay
+    final int actualDay = _dayController.startDay + day;
+    _dateTime = _dateTime.copyWith(day: actualDay);
   }
 
   /// Called when the selected item of the months [CurveScrollWheel] or [FlatScrollWheel] changed.
   void changeMonth({required int month}) {
     _monthController = _monthController.copyWith(selectedIndex: month);
 
+    // Calculate the actual month value based on startMonth
+    final int actualMonth = _monthController.startMonth + month;
+
     // Check if the current month and year is equal to the start date's month and year.
     // If so, change `_startDay` to the start date's day.
     // Otherwise, make it null.
-    if (month == _startDate.month - 1 && _dateTime.year == _startDate.year) {
+    if (actualMonth == _startDate.month && _dateTime.year == _startDate.year) {
       _startDay = _startDate.day - 1;
     } else {
       _startDay = null;
@@ -188,7 +213,7 @@ class DateController with ChangeNotifier {
     // Check if the current month and year is equal to the last date's month and year.
     // If so, change `_lastDay` to the last date's day.
     // Otherwise, make it null.
-    if (month == _lastDate.month - 1 && _dateTime.year == _lastDate.year) {
+    if (actualMonth == _lastDate.month && _dateTime.year == _lastDate.year) {
       _lastDay = _lastDate.day;
     } else {
       _lastDay = null;
@@ -197,7 +222,7 @@ class DateController with ChangeNotifier {
     // Update number of days without notifying listeners immediately
     _updateNumberOfDays(shouldNotify: false);
 
-    _dateTime = _dateTime.copyWith(month: month + 1);
+    _dateTime = _dateTime.copyWith(month: actualMonth);
     
     // Delay notification until after the current frame to avoid build conflicts
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -256,9 +281,18 @@ class DateController with ChangeNotifier {
 
     // When hideOutOfRange is true, update the number of months
     if (_hideOutOfRange) {
+      int startMonth = 1;
       int numberOfMonths = 12;
+      
+      // Check if we need to limit months from the start
+      if (year == _startDate.year) {
+        startMonth = _startDate.month;
+        numberOfMonths = 12 - _startDate.month + 1;
+      }
+      
+      // Check if we need to limit months from the end
       if (year == _lastDate.year) {
-        numberOfMonths = _lastDate.month;
+        numberOfMonths = _lastDate.month - startMonth + 1;
       }
       
       // Update month controller with the new number of months
@@ -270,6 +304,7 @@ class DateController with ChangeNotifier {
       _monthController = _monthController.copyWith(
         selectedIndex: adjustedSelectedMonth,
         numberOfMonths: numberOfMonths,
+        startMonth: startMonth,
       );
     }
 
@@ -291,22 +326,33 @@ class DateController with ChangeNotifier {
   /// Called when the [changeMonth] & [changeYear] is triggered.
   /// This is important so that the `total number of days` is updated when the month or year changes.
   void _updateNumberOfDays({bool shouldNotify = true}) {
-    int numberOfDays = _getNumberOfDays(year: _yearController.selectedIndex, month: _monthController.selectedIndex);
+    final int currentYear = int.parse(_yearController.items[_yearController.selectedIndex]);
+    final int currentMonth = _monthController.items.indexOf(_monthController.items[_monthController.selectedIndex]) + _monthController.startMonth;
     
-    // When hideOutOfRange is true, limit the number of days based on lastDate
+    int totalDaysInMonth = _getNumberOfDays(year: currentYear, month: currentMonth - 1);
+    int startDay = 1;
+    int numberOfDays = totalDaysInMonth;
+    
+    // When hideOutOfRange is true, limit the number of days based on startDate and lastDate
     if (_hideOutOfRange) {
-      final int currentYear = int.parse(_yearController.items[_yearController.selectedIndex]);
-      final int currentMonth = _monthController.selectedIndex + 1;
-      
-      // If current year-month matches lastDate year-month, limit to lastDate.day
+      // Check if we need to limit days from the start
+      if (currentYear == _startDate.year && currentMonth == _startDate.month) {
+        startDay = _startDate.day;
+        numberOfDays = totalDaysInMonth - _startDate.day + 1;
+      }
+      // Check if we need to limit days from the end
       if (currentYear == _lastDate.year && currentMonth == _lastDate.month) {
-        numberOfDays = _lastDate.day;
+        numberOfDays = _lastDate.day - startDay + 1;
       }
     }
 
     final int selectedIndex = _dayController.selectedIndex >= numberOfDays ? numberOfDays - 1 : _dayController.selectedIndex;
 
-    _dayController = _dayController.copyWith(selectedIndex: selectedIndex, numberOfDays: numberOfDays);
+    _dayController = _dayController.copyWith(
+      selectedIndex: selectedIndex, 
+      numberOfDays: numberOfDays,
+      startDay: startDay,
+    );
 
     if (shouldNotify) {
       notifyListeners();
@@ -366,9 +412,11 @@ class _DayController implements IDateController {
   const _DayController._({
     required int selectedIndex,
     required int numberOfDays,
+    required int startDay,
     required List<String> days,
   })  : _selectedIndex = selectedIndex,
         _numberOfDays = numberOfDays,
+        _startDay = startDay,
         _days = days;
 
   /// Currently selected index. Can be updated with [copyWith].
@@ -377,23 +425,30 @@ class _DayController implements IDateController {
   /// Total number of days in a month. Can be updated with [copyWith].
   final int _numberOfDays;
 
+  /// Starting day number (default is 1). Can be updated with [copyWith].
+  final int _startDay;
+
   /// Collection of days in [String] type.
   final List<String> _days;
 
   @override
   int get selectedIndex => _selectedIndex;
   int get numberOfDays => _numberOfDays;
+  int get startDay => _startDay;
   @override
   List<String> get items => _days;
 
-  factory _DayController({int? selectedIndex, int? numberOfDays}) {
+  factory _DayController({int? selectedIndex, int? numberOfDays, int? startDay}) {
+    final int start = startDay ?? 1;
     final List<String> days = _generateDays(
       numberOfDays: numberOfDays ?? _getNumberOfDays(year: DateTime.now().year, month: DateTime.now().month),
+      startDay: start,
     );
 
     return _DayController._(
-      selectedIndex: selectedIndex ?? DateTime.now().day - 1,
+      selectedIndex: selectedIndex ?? DateTime.now().day - start,
       numberOfDays: days.length,
+      startDay: start,
       days: days,
     );
   }
@@ -402,10 +457,12 @@ class _DayController implements IDateController {
   _DayController copyWith({
     int? selectedIndex,
     int? numberOfDays,
+    int? startDay,
   }) =>
       _DayController(
         selectedIndex: selectedIndex ?? _selectedIndex,
         numberOfDays: numberOfDays ?? _numberOfDays,
+        startDay: startDay ?? _startDay,
       );
 }
 
@@ -418,10 +475,12 @@ class _MonthController implements IDateController {
     required MonthFormat monthFormat,
     required int selectedIndex,
     required int numberOfMonths,
+    required int startMonth,
     required List<String> months,
   })  : _monthFormat = monthFormat,
         _selectedIndex = selectedIndex,
         _numberOfMonths = numberOfMonths,
+        _startMonth = startMonth,
         _months = months;
 
   /// Currently selected index. Can be updated with [copyWith].
@@ -433,6 +492,9 @@ class _MonthController implements IDateController {
   /// Total number of months to display. Can be updated with [copyWith].
   final int _numberOfMonths;
 
+  /// Starting month number (1-12, default is 1 for January). Can be updated with [copyWith].
+  final int _startMonth;
+
   /// Collection of months in [String] type.
   final List<String> _months;
 
@@ -440,21 +502,29 @@ class _MonthController implements IDateController {
     MonthFormat? monthFormat,
     int? selectedIndex,
     int? numberOfMonths,
+    int? startMonth,
   }) {
     final MonthFormat format = monthFormat ?? MonthFormat.full;
     final int numMonths = numberOfMonths ?? 12;
-    final List<String> allMonths = _generateMonths(monthFormat: format);
+    final int start = startMonth ?? 1;
+    final List<String> months = _generateMonths(
+      monthFormat: format,
+      startMonth: start,
+      numberOfMonths: numMonths,
+    );
 
     return _MonthController._(
       monthFormat: format,
-      selectedIndex: selectedIndex ?? DateTime.now().month - 1,
+      selectedIndex: selectedIndex ?? DateTime.now().month - start,
       numberOfMonths: numMonths,
-      months: allMonths.sublist(0, numMonths),
+      startMonth: start,
+      months: months,
     );
   }
 
   MonthFormat get monthFormat => _monthFormat;
   int get numberOfMonths => _numberOfMonths;
+  int get startMonth => _startMonth;
   @override
   int get selectedIndex => _selectedIndex;
   @override
@@ -465,11 +535,13 @@ class _MonthController implements IDateController {
     MonthFormat? monthFormat,
     int? selectedIndex,
     int? numberOfMonths,
+    int? startMonth,
   }) =>
       _MonthController(
         monthFormat: monthFormat ?? _monthFormat,
         selectedIndex: selectedIndex ?? _selectedIndex,
         numberOfMonths: numberOfMonths ?? _numberOfMonths,
+        startMonth: startMonth ?? _startMonth,
       );
 }
 
@@ -573,8 +645,8 @@ int _getNumberOfDays({required int year, required int month}) {
 /// If [startDay] is specified, it will be generate a total number of days starting from the given [startDay].
 ///
 /// If [lastDay] is specified, it will be generate a total number of days ending with the given [lastDay].
-List<String> _generateDays({required int numberOfDays}) {
-  return List.generate(numberOfDays, (i) => (i + 1).toString());
+List<String> _generateDays({required int numberOfDays, int startDay = 1}) {
+  return List.generate(numberOfDays, (i) => (startDay + i).toString());
 }
 
 /// Responsible for creating the list of months in [String] type.
@@ -590,14 +662,14 @@ List<String> _generateDays({required int numberOfDays}) {
 /// If [startMonth] is specified, it will generate the list of months starting from the given [startMonth].
 ///
 /// If [lastMonth] is specified, it will generate the list of months ending with the given [lastMonth].
-List<String> _generateMonths({required MonthFormat monthFormat}) {
+List<String> _generateMonths({required MonthFormat monthFormat, int startMonth = 1, int numberOfMonths = 12}) {
   switch (monthFormat) {
     case MonthFormat.threeLetters:
-      return List.generate(Month.values.length, (i) => _capitalize(Month.values[i].threeAbv));
+      return List.generate(numberOfMonths, (i) => _capitalize(Month.values[startMonth - 1 + i].threeAbv));
     case MonthFormat.twoLetters:
-      return List.generate(Month.values.length, (i) => _capitalize(Month.values[i].twoAbv));
+      return List.generate(numberOfMonths, (i) => _capitalize(Month.values[startMonth - 1 + i].twoAbv));
     default:
-      return List.generate(Month.values.length, (i) => _capitalize(Month.values[i].name));
+      return List.generate(numberOfMonths, (i) => _capitalize(Month.values[startMonth - 1 + i].name));
   }
 }
 

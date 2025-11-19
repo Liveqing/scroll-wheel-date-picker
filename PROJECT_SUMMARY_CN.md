@@ -260,3 +260,64 @@ ScrollWheelDatePicker(
 
 每种模式都经过充分测试，提供了示例代码，并更新了文档说明。所有问题都已修复！项目已经在运行中，您可以直接在浏览器中体验这些新功能！
 
+### 4. hideOutOfRange 支持 startDate 隐藏
+
+**问题描述**：当设置 `hideOutOfRange = true` 时，只隐藏了 `lastDate` 之后的日期和月份，但 `startDate` 之前的日期和月份仍然显示为灰色（不可选择状态）。用户希望 `startDate` 之前的内容也完全不可见。
+
+**解决方案**：
+
+1. **修改数据生成函数**：
+   - `_generateDays()`: 添加 `startDay` 参数，支持从任意日期开始生成
+   - `_generateMonths()`: 添加 `startMonth` 和 `numberOfMonths` 参数，支持生成指定范围的月份
+
+2. **扩展控制器类**：
+   - `_DayController`: 添加 `_startDay` 字段，支持从任意日期开始的列表
+   - `_MonthController`: 添加 `_startMonth` 字段，支持从任意月份开始的列表
+
+3. **更新核心逻辑**：
+   - 在 `DateController` 构造函数中，当 `hideOutOfRange = true` 时，同时考虑 `startDate` 和 `lastDate` 来限制初始范围
+   - 在 `changeDay()` 方法中，根据 `startDay` 计算实际日期值
+   - 在 `changeMonth()` 方法中，根据 `startMonth` 计算实际月份值
+   - 在 `changeYear()` 方法中，动态更新月份的起始位置和数量
+   - 在 `_updateNumberOfDays()` 方法中，同时处理起始和结束日期的限制
+
+4. **修复 Offset 冲突**：
+   - **问题**：当 `hideOutOfRange = true` 时，列表已经被裁剪（例如只显示 Feb-Dec），但 `startOffset` 和 `lastOffset` 仍然使用原来的索引系统，导致错误地禁用了有效的项目（比如 February 显示为灰色并跳转到 March）
+   - **解决**：修改 getter 方法，当 `hideOutOfRange = true` 时返回 `null`：
+     ```dart
+     int? get startMonth => _hideOutOfRange ? null : _startMonth;
+     int? get lastMonth => _hideOutOfRange ? null : _lastMonth;
+     int? get startDay => _hideOutOfRange ? null : _startDay;
+     int? get lastDay => _hideOutOfRange ? null : _lastDay;
+     ```
+   - **原理**：
+     - `hideOutOfRange = false`：使用完整列表（12个月）+ offset 禁用机制
+     - `hideOutOfRange = true`：使用裁剪列表 + 无 offset（列表本身已经是有效范围）
+
+**修复后的效果**：
+- ✅ `startDate` 之前的月份和日期完全不可见
+- ✅ `lastDate` 之后的月份和日期完全不可见  
+- ✅ 所有可见的项目都可以正常选择（无灰色禁用状态）
+- ✅ 跨年份切换时正确更新月份和日期范围
+
+**使用场景示例**：
+```dart
+ScrollWheelDatePicker(
+  startDate: DateTime(2020, 2, 5),  // 2020年2月5日
+  initialDate: DateTime.now(),
+  lastDate: DateTime.now(),
+  hideOutOfRange: true,
+  // ...
+)
+```
+
+**实际效果**（假设今天是2025年11月19日）：
+- **2020年**：
+  - 月份轮：只显示 Feb - Dec（1月被隐藏）
+  - 日期轮：2月只显示 5-29 号（1-4号被隐藏）
+- **2025年**：
+  - 月份轮：只显示 Jan - Nov（12月被隐藏）
+  - 日期轮：11月只显示 1-19 号（20-30号被隐藏）
+- **其他年份**：
+  - 显示所有12个月和每月的所有日期
+
