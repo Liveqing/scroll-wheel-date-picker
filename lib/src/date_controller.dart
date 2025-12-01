@@ -74,7 +74,7 @@ class DateController with ChangeNotifier {
     // Calculate initial number of days
     final int initYear = initialDate?.year ?? DateTime.now().year;
     final int initMonth = initialDate?.month ?? DateTime.now().month;
-    int initNumberOfDays = _getNumberOfDays(year: initYear, month: initMonth);
+    int initNumberOfDays = _getNumberOfDays(year: initYear, month: initMonth - 1);
     int initStartDay = 1; // Default start day is 1
     
     // When hideOutOfRange is true, limit the number of days based on startDate and lastDate
@@ -219,10 +219,103 @@ class DateController with ChangeNotifier {
       _lastDay = null;
     }
 
-    // Update number of days without notifying listeners immediately
-    _updateNumberOfDays(shouldNotify: false);
+    // Preserve the current day before updating month
+    final int currentDay = _dateTime.day;
+    final int currentYear = _dateTime.year;
 
+    // Update _dateTime with the new month BEFORE updating days
     _dateTime = _dateTime.copyWith(month: actualMonth);
+
+    if (_hideOutOfRange) {
+      // Recalculate and update month controller based on current year
+      // This ensures that when user scrolls through months, the range is still respected
+      int startMonth = 1;
+      int numberOfMonths = 12;
+      
+      // Check if we need to limit months from the start
+      if (currentYear == _startDate.year) {
+        startMonth = _startDate.month;
+        numberOfMonths = 12 - _startDate.month + 1;
+      }
+      
+      // Check if we need to limit months from the end
+      if (currentYear == _lastDate.year) {
+        numberOfMonths = _lastDate.month - startMonth + 1;
+      }
+      
+      // Validate that the current month is within bounds
+      int validatedMonth = actualMonth;
+      if (currentYear == _startDate.year && actualMonth < _startDate.month) {
+        validatedMonth = _startDate.month;
+      } else if (currentYear == _lastDate.year && actualMonth > _lastDate.month) {
+        validatedMonth = _lastDate.month;
+      }
+      
+      // Update month controller with validated values
+      _monthController = _monthController.copyWith(
+        selectedIndex: validatedMonth - startMonth,
+        numberOfMonths: numberOfMonths,
+        startMonth: startMonth,
+      );
+      
+      // Update _dateTime with validated month
+      _dateTime = _dateTime.copyWith(month: validatedMonth);
+      
+      // Update number of days based on the validated month
+      final int currentMonth = validatedMonth;
+      int totalDaysInMonth = _getNumberOfDays(year: currentYear, month: currentMonth - 1);
+      int startDay = 1;
+      int numberOfDays = totalDaysInMonth;
+      
+      // Check if we need to limit days from the start
+      if (currentYear == _startDate.year && currentMonth == _startDate.month) {
+        startDay = _startDate.day;
+        numberOfDays = totalDaysInMonth - _startDate.day + 1;
+      }
+      // Check if we need to limit days from the end
+      if (currentYear == _lastDate.year && currentMonth == _lastDate.month) {
+        numberOfDays = _lastDate.day - startDay + 1;
+      }
+      
+      // Determine the correct day and selectedIndex
+      int finalDay = currentDay;
+      int finalSelectedIndex;
+      
+      // Check if the current day is before startDay
+      if (currentYear == _startDate.year && currentMonth == _startDate.month && currentDay < _startDate.day) {
+        finalDay = _startDate.day;
+        finalSelectedIndex = 0;
+      }
+      // Check if the current day is after the last available day
+      else if (currentYear == _lastDate.year && currentMonth == _lastDate.month && currentDay > _lastDate.day) {
+        finalDay = _lastDate.day;
+        finalSelectedIndex = numberOfDays - 1;
+      }
+      // Check if the current day exceeds the total days in the month
+      else if (currentDay > startDay + numberOfDays - 1) {
+        finalDay = startDay + numberOfDays - 1;
+        finalSelectedIndex = numberOfDays - 1;
+      }
+      // Otherwise, preserve the current day
+      else {
+        finalDay = currentDay;
+        // Calculate selectedIndex based on the current day and startDay
+        finalSelectedIndex = currentDay - startDay;
+      }
+      
+      // Update day controller with the correct values
+      _dayController = _dayController.copyWith(
+        selectedIndex: finalSelectedIndex,
+        numberOfDays: numberOfDays,
+        startDay: startDay,
+      );
+      
+      // Update _dateTime with the final day
+      _dateTime = _dateTime.copyWith(day: finalDay);
+    } else {
+      // When hideOutOfRange is false, use the original logic
+      _updateNumberOfDays(shouldNotify: false);
+    }
     
     // Delay notification until after the current frame to avoid build conflicts
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -279,7 +372,7 @@ class DateController with ChangeNotifier {
       _lastDay = null;
     }
 
-    // When hideOutOfRange is true, update the number of months
+    // When hideOutOfRange is true, update the number of months and validate current selection
     if (_hideOutOfRange) {
       int startMonth = 1;
       int numberOfMonths = 12;
@@ -295,23 +388,95 @@ class DateController with ChangeNotifier {
         numberOfMonths = _lastDate.month - startMonth + 1;
       }
       
-      // Update month controller with the new number of months
-      final int currentSelectedMonth = _monthController.selectedIndex;
-      final int adjustedSelectedMonth = currentSelectedMonth >= numberOfMonths 
-          ? numberOfMonths - 1 
-          : currentSelectedMonth;
+      // Calculate the current actual month based on the old month controller
+      final int oldActualMonth = _monthController.startMonth + _monthController.selectedIndex;
       
+      // Validate that the current month is within bounds for the new year
+      int validatedMonth = oldActualMonth;
+      if (year == _startDate.year && oldActualMonth < _startDate.month) {
+        validatedMonth = _startDate.month;
+      } else if (year == _lastDate.year && oldActualMonth > _lastDate.month) {
+        validatedMonth = _lastDate.month;
+      }
+      
+      // Ensure the validated month is within the new month range
+      if (validatedMonth < startMonth) {
+        validatedMonth = startMonth;
+      } else if (validatedMonth > startMonth + numberOfMonths - 1) {
+        validatedMonth = startMonth + numberOfMonths - 1;
+      }
+      
+      // Update month controller with validated values
       _monthController = _monthController.copyWith(
-        selectedIndex: adjustedSelectedMonth,
+        selectedIndex: validatedMonth - startMonth,
         numberOfMonths: numberOfMonths,
         startMonth: startMonth,
       );
+      
+      // Preserve the current day before updating
+      final int currentDay = _dateTime.day;
+      
+      // Update _dateTime with the new year and validated month
+      _dateTime = _dateTime.copyWith(year: year, month: validatedMonth);
+      
+      // Update number of days based on the new year and month
+      final int currentYear = _dateTime.year;
+      final int currentMonth = _dateTime.month;
+      int totalDaysInMonth = _getNumberOfDays(year: currentYear, month: currentMonth - 1);
+      int startDay = 1;
+      int numberOfDays = totalDaysInMonth;
+      
+      // Check if we need to limit days from the start
+      if (currentYear == _startDate.year && currentMonth == _startDate.month) {
+        startDay = _startDate.day;
+        numberOfDays = totalDaysInMonth - _startDate.day + 1;
+      }
+      // Check if we need to limit days from the end
+      if (currentYear == _lastDate.year && currentMonth == _lastDate.month) {
+        numberOfDays = _lastDate.day - startDay + 1;
+      }
+      
+      // Determine the correct day and selectedIndex
+      int finalDay = currentDay;
+      int finalSelectedIndex;
+      
+      // Check if the current day is before startDay
+      if (currentYear == _startDate.year && currentMonth == _startDate.month && currentDay < _startDate.day) {
+        finalDay = _startDate.day;
+        finalSelectedIndex = 0;
+      }
+      // Check if the current day is after the last available day
+      else if (currentYear == _lastDate.year && currentMonth == _lastDate.month && currentDay > _lastDate.day) {
+        finalDay = _lastDate.day;
+        finalSelectedIndex = numberOfDays - 1;
+      }
+      // Check if the current day exceeds the total days in the month
+      else if (currentDay > startDay + numberOfDays - 1) {
+        finalDay = startDay + numberOfDays - 1;
+        finalSelectedIndex = numberOfDays - 1;
+      }
+      // Otherwise, preserve the current day
+      else {
+        finalDay = currentDay;
+        // Calculate selectedIndex based on the current day and startDay
+        finalSelectedIndex = currentDay - startDay;
+      }
+      
+      // Update day controller with the correct values
+      _dayController = _dayController.copyWith(
+        selectedIndex: finalSelectedIndex,
+        numberOfDays: numberOfDays,
+        startDay: startDay,
+      );
+      
+      // Update _dateTime with the final day
+      _dateTime = _dateTime.copyWith(day: finalDay);
+    } else {
+      // When hideOutOfRange is false, just update the year
+      _dateTime = _dateTime.copyWith(year: year);
+      // Update number of days without notifying listeners immediately
+      _updateNumberOfDays(shouldNotify: false);
     }
-
-    // Update number of days without notifying listeners immediately
-    _updateNumberOfDays(shouldNotify: false);
-
-    _dateTime = _dateTime.copyWith(year: year);
     
     // Delay notification until after the current frame to avoid build conflicts
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -370,7 +535,7 @@ class DateController with ChangeNotifier {
       selectedIndex: initialDate.day - 1,
       numberOfDays: _getNumberOfDays(
         year: initialDate.year,
-        month: initialDate.month,
+        month: initialDate.month - 1,
       ),
     );
     _monthController = _monthController.copyWith(selectedIndex: initialDate.month - 1);
@@ -441,7 +606,7 @@ class _DayController implements IDateController {
   factory _DayController({int? selectedIndex, int? numberOfDays, int? startDay}) {
     final int start = startDay ?? 1;
     final List<String> days = _generateDays(
-      numberOfDays: numberOfDays ?? _getNumberOfDays(year: DateTime.now().year, month: DateTime.now().month),
+      numberOfDays: numberOfDays ?? _getNumberOfDays(year: DateTime.now().year, month: DateTime.now().month - 1),
       startDay: start,
     );
 

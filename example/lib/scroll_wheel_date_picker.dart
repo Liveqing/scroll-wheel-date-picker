@@ -12,6 +12,7 @@ import 'src/widgets/simple_month_year_picker.dart';
 import 'src/widgets/same_day_picker.dart';
 import 'src/widgets/hide_out_of_range_picker.dart';
 import 'src/widgets/custom_margin_picker.dart';
+import 'src/widgets/date_range_test_picker.dart';
 
 class ScrollWheelDatePicker extends StatelessWidget {
   const ScrollWheelDatePicker({super.key});
@@ -192,6 +193,31 @@ class ScrollWheelDatePicker extends StatelessWidget {
                   },
                   child: const Text(
                     "自定义 Overlay 边距",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const DateRangeTestPicker();
+                        },
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "超出时间日期范围测试",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
